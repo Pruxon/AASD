@@ -52,3 +52,5 @@ if __name__ == "__main__":
             sender.stop()
             break
     print("Agents finished")
+
+#TODO inicjalizacja iluś agentów pojazdów, karetek i managera + dodać ich do docker-compose (na zasadzie participant1, karetka1 etc czy coś)
