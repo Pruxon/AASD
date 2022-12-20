@@ -4,7 +4,7 @@ from spade.behaviour import OneShotBehaviour
 from spade.message import Message
 from spade.template import Template
 
-from agents.manager_agent import ManagerAgent
+from aasd.agents.manager_agent import ManagerAgent
 
 
 class SenderAgent(Agent):
@@ -21,8 +21,10 @@ class SenderAgent(Agent):
 
             msg = Message(to="manager@localhost")
             msg.set_metadata("performative", "inform")
-            msg.set_metadata("msgType", "evLocationData")
-            msg.body = "Hello World"  # Set the message content
+            msg.set_metadata("msgType", "emergencyVehicleInfo")
+            msg.body = (
+                '{"x": 1.0, "y": 0.1, "assigned": false}'  # Set the message content
+            )
 
             await self.send(msg)
             print("Message 2 sent!")

@@ -12,3 +12,8 @@
 1. Udaj się pod adres http://127.0.0.1:5280/admin
 2. Wpisz username *admin@localhost*
 3. Wpisz hasło *passw0rd*
+
+# Odpalenie agentów
+```sh
+python3.9 -m aasd
+```
