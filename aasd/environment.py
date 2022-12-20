@@ -66,13 +66,15 @@ class Environment:
 
 
 class Vehicle:
-    def __init__(self, x: int, y: int, direction: Direction, vehicle_type: VehicleType):
+    def __init__(self, x: int, y: int, direction: Direction, vehicle_type: VehicleType, id: str):
+        #TODO id wehikułu musi być takie samo jak jid agenta, który posiada dany wehikuł
         self.x = x
         self.y = y
         self.direction = direction
         self.agent = None  # konstruowanie agenta z rejestracją na XMPP
         self.is_crashed = True
         self.type = vehicle_type
+        self.id = id
 
     def new_x(self):
         if self.direction == Direction.Left:
@@ -107,3 +109,4 @@ def is_nearby(vehicle1, vehicle2, reach: int) -> bool:
     x_nearby = abs(vehicle1.x - vehicle2.x) <= reach
     y_nearby = abs(vehicle1.y - vehicle2.y) <= reach
     return x_nearby and y_nearby
+
