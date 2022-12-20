@@ -41,11 +41,14 @@ class ManagerAgent(spade.agent.Agent):
         async def run(self):
             msg = await self.receive()
             if msg:
-                print(f"ManagerAgent: AccidentInfo msg received from {msg.sender}")
-                if msg.sender in self.agent.accident_vehicle_to_ev:
+                msg_sender = str(msg.sender)
+                print(f"ManagerAgent: AccidentInfo msg received from {msg_sender}")
+                if msg_sender in self.agent.accident_vehicle_to_ev:
                     return  # duplicate
                 dispatchable_evs = [
-                    e for e in self.agent.emergency_vehicles if not e.assigned
+                    e
+                    for _, e in self.agent.emergency_vehicles.items()
+                    if not e.assigned
                 ]
                 if len(dispatchable_evs) == 0:
                     print("ManagerAgent: no EVs to dispatch; aborting")
@@ -63,14 +66,14 @@ class ManagerAgent(spade.agent.Agent):
 
                 await self.send(msg)
 
-                msg = Message(to=msg.sender)
+                msg = Message(to=msg_sender)
                 msg.set_metadata("performative", "agree")
                 msg.set_metadata("msgType", "helpArrivalInfo")
                 msg.body = json.dumps({"ev_id": ev_to_dispatch.id})
-                self.send(msg)
+                await self.send(msg)
 
                 print(
-                    f"ManagerAgent: dispatched EV={ev_to_dispatch.id} to {msg.sender}"
+                    f"ManagerAgent: dispatched EV={ev_to_dispatch.id} to {msg_sender}"
                 )
 
     class HandleEmergencyVehicleInfoBehaviour(spade.behaviour.CyclicBehaviour):
@@ -85,7 +88,7 @@ class ManagerAgent(spade.agent.Agent):
             msg = await self.receive()
             if msg:
                 ev_info = json.loads(msg.body)
-                ev_id = msg.sender
+                ev_id = str(msg.sender)
                 status = EvStatus(
                     id=ev_id,
                     x=ev_info["x"],

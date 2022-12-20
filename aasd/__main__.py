@@ -1,4 +1,5 @@
 import time
+import asyncio
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
 from spade.message import Message
@@ -10,21 +11,22 @@ from aasd.agents.manager_agent import ManagerAgent
 class SenderAgent(Agent):
     class InformBehav(OneShotBehaviour):
         async def run(self):
-            print("InformBehav running")
-            msg = Message(to="manager@localhost")
-            msg.set_metadata("performative", "inform")
-            msg.set_metadata("msgType", "accidentInfo")
-            msg.body = "Hello World"  # Set the message content
-
-            await self.send(msg)
-            print("Message sent!")
 
             msg = Message(to="manager@localhost")
             msg.set_metadata("performative", "inform")
             msg.set_metadata("msgType", "emergencyVehicleInfo")
-            msg.body = (
-                '{"x": 1.0, "y": 0.1, "assigned": false}'  # Set the message content
-            )
+            msg.body = '{"x": 1.0, "y": 0.1, "assigned": false}'
+
+            await self.send(msg)
+            print("Message sent!")
+
+            await asyncio.sleep(1)
+
+            print("InformBehav running")
+            msg = Message(to="manager@localhost")
+            msg.set_metadata("performative", "request")
+            msg.set_metadata("msgType", "accidentInfo")
+            msg.body = '{"x": 20.0, "y": 0.0}'
 
             await self.send(msg)
             print("Message 2 sent!")
