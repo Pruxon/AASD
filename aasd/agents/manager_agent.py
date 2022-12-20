@@ -1,8 +1,10 @@
 import spade as spade
+from spade.message import Message
 from spade.template import Template
 
 from dataclasses import dataclass
 import json
+from math import sqrt
 
 
 @dataclass
@@ -15,23 +17,65 @@ class EvStatus:
 
 class ManagerAgent(spade.agent.Agent):
     class HandleAccidentInfoBehaviour(spade.behaviour.CyclicBehaviour):
-        def __init__(self, ev: list[EvStatus], **kwargs):
-            self.emergency_vehicles = ev
+        def __init__(self, agent, **kwargs):
+            self.agent = agent
             super().__init__(**kwargs)
 
         async def on_start(self) -> None:
             print("Manager is listening for accident info...")
 
+        def choose_closest_ev(
+            self, evs: list[EvStatus], x: float, y: float
+        ) -> EvStatus:
+            closest_ev: evs = evs[0]
+            closest_ev_dist = float("inf")
+            for ev in evs[1:]:
+                x_diff = ev.x - x
+                y_diff = ev.y - y
+                dist = sqrt(x_diff * x_diff + y_diff * y_diff)
+                if dist < closest_ev_dist:
+                    closest_ev = ev
+                    closest_ev_dist = dist
+            return closest_ev
+
         async def run(self):
             msg = await self.receive()
             if msg:
-                print(f"Message AccidentInfo received:\n{msg}")
-                print(msg.sender)
-                print(msg.get_metadata("performative"))
+                print(f"ManagerAgent: AccidentInfo msg received from {msg.sender}")
+                if msg.sender in self.agent.accident_vehicle_to_ev:
+                    return  # duplicate
+                dispatchable_evs = [
+                    e for e in self.agent.emergency_vehicles if not e.assigned
+                ]
+                if len(dispatchable_evs) == 0:
+                    print("ManagerAgent: no EVs to dispatch; aborting")
+                    return
+
+                accident_info = json.loads(msg.body)
+                x = accident_info["x"]
+                y = accident_info["y"]
+
+                ev_to_dispatch = self.choose_closest_ev(dispatchable_evs, x, y)
+                msg = Message(to=ev_to_dispatch.id)
+                msg.set_metadata("performative", "inform")
+                msg.set_metadata("msgType", "processedAccidentInfo")
+                msg.body = json.dumps({"x": x, "y": y})
+
+                await self.send(msg)
+
+                msg = Message(to=msg.sender)
+                msg.set_metadata("performative", "agree")
+                msg.set_metadata("msgType", "helpArrivalInfo")
+                msg.body = json.dumps({"ev_id": ev_to_dispatch.id})
+                self.send(msg)
+
+                print(
+                    f"ManagerAgent: dispatched EV={ev_to_dispatch.id} to {msg.sender}"
+                )
 
     class HandleEmergencyVehicleInfoBehaviour(spade.behaviour.CyclicBehaviour):
-        def __init__(self, ev: list[EvStatus], **kwargs):
-            self.emergency_vehicles = ev
+        def __init__(self, agent, **kwargs):
+            self.agent = agent
             super().__init__(**kwargs)
 
         async def on_start(self) -> None:
@@ -42,30 +86,37 @@ class ManagerAgent(spade.agent.Agent):
             if msg:
                 ev_info = json.loads(msg.body)
                 ev_id = msg.sender
-                self.emergency_vehicles[ev_id] = EvStatus(
+                status = EvStatus(
                     id=ev_id,
                     x=ev_info["x"],
                     y=ev_info["y"],
                     assigned=ev_info["assigned"],
                 )
+                self.agent.emergency_vehicles[ev_id] = status
+                if not status.assigned:
+                    # remove assignment entry for the ev
+                    self.agent.accident_vehicle_to_ev = {
+                        k: v
+                        for k, v in self.agent.accident_vehicle_to_ev.items()
+                        if v != ev_id
+                    }
 
                 print(
-                    f"EmergencyVehicleInfo message received: {self.emergency_vehicles[ev_id]}"
+                    f"EmergencyVehicleInfo message received: {self.agent.emergency_vehicles[ev_id]}"
                 )
 
     async def setup(self) -> None:
         self.agent = self
         print("Manager is starting")
         self.emergency_vehicles: dict[str, EvStatus] = {}
+        self.accident_vehicle_to_ev: dict[str, str] = {}
 
         t1 = Template()
         t1.set_metadata("msgType", "accidentInfo")
-        self.add_behaviour(
-            self.HandleAccidentInfoBehaviour(ev=self.emergency_vehicles), template=t1
-        )
+        self.add_behaviour(self.HandleAccidentInfoBehaviour(agent=self), template=t1)
         t2 = Template()
         t2.set_metadata("msgType", "emergencyVehicleInfo")
         self.add_behaviour(
-            self.HandleEmergencyVehicleInfoBehaviour(ev=self.emergency_vehicles),
+            self.HandleEmergencyVehicleInfoBehaviour(agent=self),
             template=t2,
         )
