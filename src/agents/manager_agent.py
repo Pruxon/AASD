@@ -3,7 +3,7 @@ from spade.template import Template
 
 
 class ManagerAgent(spade.agent.Agent):
-    class ListenForAccidentInfoBehaviour(spade.behaviour.CyclicBehaviour):
+    class HandleAccidentInfoBehaviour(spade.behaviour.CyclicBehaviour):
         async def on_start(self) -> None:
             print("Manager is listening for accident info...")
 
@@ -14,7 +14,7 @@ class ManagerAgent(spade.agent.Agent):
                 print(msg.sender)
                 print(msg.get_metadata("performative"))
 
-    class ListenForEmergencyVehicleInfoBehaviour(spade.behaviour.CyclicBehaviour):
+    class HandleEmergencyVehicleInfoBehaviour(spade.behaviour.CyclicBehaviour):
         async def on_start(self) -> None:
             print("Manager is listening for emergency vehicle info...")
 
@@ -31,7 +31,7 @@ class ManagerAgent(spade.agent.Agent):
 
         t1 = Template()
         t1.set_metadata("msgType", "accidentInfo")
-        self.add_behaviour(self.ListenForAccidentInfoBehaviour(), template=t1)
+        self.add_behaviour(self.HandleAccidentInfoBehaviour(), template=t1)
         t2 = Template()
         t2.set_metadata("msgType", "evLocationData")
-        self.add_behaviour(self.ListenForEmergencyVehicleInfoBehaviour(), template=t2)
+        self.add_behaviour(self.HandleEmergencyVehicleInfoBehaviour(), template=t2)
