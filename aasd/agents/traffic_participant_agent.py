@@ -2,7 +2,8 @@ import asyncio
 import spade as spade
 import json as json
 from spade.template import Template
-from aasd.environment import Vehicle, Environment
+from aasd.environment import Environment
+from aasd.vehicle import Vehicle, VehicleType
 
 
 class TrafficParticipantAgent(spade.agent.Agent):
@@ -54,12 +55,26 @@ class TrafficParticipantAgent(spade.agent.Agent):
             super().__init__(**kwargs)
 
         async def run(self):
-            if self.agent.helpDispatched:
+            if self.agent.is_help_dispatched:
                 self.kill()
             else:
                 self.agent.informManagerAfterAccident(
                     self.agent.vehicle.x, self.agent.vehicle.y
-                )
+                    )
+
+                await asyncio.sleep(1)
+
+    class WaitForEmergencyVehicleBehaviour(spade.behaviour.CyclicBehaviour):
+        def __init__(self, agent, ev_id: str, **kwargs):
+            self.agent = agent
+            self.ev_id = ev_id
+            super().__init__(**kwargs)
+
+        async def run(self):
+            if self.agent.env.is_nearby_by_id(self.agent.vehicle.id, self.ev_id):
+                self.agent.vehicle.continue_moving()
+                self.agent.vehicle.type = VehicleType.Normal
+            else:
                 await asyncio.sleep(1)
 
     class HandleForEmergencyVehicleIncomingBehaviour(spade.behaviour.CyclicBehaviour):
@@ -81,7 +96,10 @@ class TrafficParticipantAgent(spade.agent.Agent):
             msg = await self.receive()
             if msg:
                 print("Help is arriving in: " + msg.body)
-                self.agent.helpDispatched = True
+                ev_info = json.loads(msg.body)
+                evId = ev_info["ev_id"]
+                self.agent.is_help_dispatched = True
+                self.agent.add_behaviour(self.agent.WaitForEmergencyVehicleBehaviour(agent=self.agent, ev_id=evId))
 
     async def setup(self):
         print(str(self.jid) + " is starting")

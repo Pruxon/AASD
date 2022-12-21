@@ -43,6 +43,18 @@ class Environment:
         vehicle.type = VehicleType.Crashed
         return vehicle.id
 
+    def findVehicleIndex(self, ev_id: str) -> Vehicle:
+        for vehicle in self.vehicles:
+            if vehicle.id == ev_id:
+                return vehicle
+        else:
+            return None
+
+    def is_nearby_by_id(self, id1: str, id2: str, radius: float) -> bool:
+        vehicle1 = self.findVehicleIndex(id1)
+        vehicle2 = self.findVehicleIndex(id2)
+        return dist(vehicle1.get_coordinates(), vehicle2.get_coordinates()) <= radius
+
 
 def is_nearby(vehicle1: Vehicle, vehicle2: Vehicle, radius: float) -> bool:
     return dist(vehicle1.get_coordinates(), vehicle2.get_coordinates()) <= radius
