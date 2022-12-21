@@ -5,6 +5,7 @@ from random import randint, random, choice
 class VehicleType(Enum):
     Normal = 1
     Emergency = 2
+    Crashed = 3
 
 
 class Direction(Enum):
