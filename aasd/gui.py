@@ -35,7 +35,7 @@ class MovementSimulationWindow:
         self.vehicles[vehicle_id] = self.canvas.create_oval(x, y, x + self.v_size, y + self.v_size, fill=color)
 
     def start(self):
-        for id, vehicle in self.vehicles.items():
+        for vehicle_id, vehicle in self.vehicles.items():
             random_x_movement = 0  # randint(-5, 6)
             random_y_movement = 0  # randint(-5, 6)
             if random() < 0.5:
@@ -44,8 +44,8 @@ class MovementSimulationWindow:
                 random_y_movement = choice([1, 2, 3, -1, -2, -3])
             x, y = self.get_vehicle_coordinates(vehicle)
             x_movement, y_movement = self.ensure_movement_correct(x, y, random_x_movement, random_y_movement)
-            print(f'vehicleId: {id}, x: {x}, y: {y}, x_move:{x_movement}, y_move: {y_movement}')
-            self.canvas.move(vehicle, x_movement, y_movement)
+            print(f'vehicleId: {vehicle_id}, x: {x}, y: {y}, x_move:{x_movement}, y_move: {y_movement}')
+            self.canvas.move(vehicle, x_movement, y_movement)  # TODO: funkcja moveto(id, x, y) do przesunięcia na wyznaczone współrzędne
 
         self.canvas.after(50, self.start)
 
