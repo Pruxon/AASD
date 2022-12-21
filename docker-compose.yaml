@@ -5,8 +5,8 @@ services:
     restart: 'unless-stopped'
     container_name: xmpp-server
     volumes:
-      - './ejabberd.yml:/home/config/ejabberd.yml'
-      - './database:/home/ejabberd/database'
+      - ./ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
+      - ./database:/home/ejabberd/database
     ports:
       - '5443:5443'
       - '5280:5280'

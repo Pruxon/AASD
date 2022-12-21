@@ -7,6 +7,12 @@ log_rotate_date: ''
 log_rotate_count: 1
 log_rate_limit: 100
 
+certfiles:
+  - /home/ejabberd/conf/server.pem
+
+ca_file: "/home/ejabberd/conf/cacert.pem"
+
+
 listen:
   - port: 5222
     ip: '::'
@@ -55,6 +61,11 @@ listen:
     turn_max_port: 65535
     ip: 0.0.0.0
     turn_ip: 0.0.0.0
+  - port: 5281
+    module: ejabberd_http
+    ip: 127.0.0.1
+    request_handlers:
+      /api: mod_http_api
 
 s2s_use_starttls: optional
 
@@ -93,6 +104,13 @@ api_permissions:
       - ejabberd_ctl
     who: all
     what: '*'
+  'some playing':
+    from:
+      - ejabberd_ctl
+      - mod_http_api
+    who:
+      acl: admin
+    what: "*"
   'admin access':
     who:
       access:
