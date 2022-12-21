@@ -74,6 +74,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
             if self.agent.env.is_nearby_by_id(self.agent.vehicle.id, self.ev_id):
                 self.agent.vehicle.continue_moving()
                 self.agent.vehicle.type = VehicleType.Normal
+                self.kill()
             else:
                 await asyncio.sleep(1)
 
