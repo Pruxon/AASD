@@ -6,17 +6,25 @@ from aasd.environment import Vehicle, Environment
 
 
 class TrafficParticipantAgent(spade.agent.Agent):
-
-    def __init__(self, vehicle: Vehicle, env: Environment, *args, **kwargs):
+    def __init__(
+        self,
+        vehicle: Vehicle,
+        env: Environment,
+        chance_to_crash: float = 0.0,
+        *args,
+        **kwargs
+    ):
         self.vehicle = vehicle
         self.env = env
-        self.helpDispatched = False
-        super(self).__init__(*args, **kwargs)
+        self.is_crashed = False
+        self.is_help_dispatched = False
+        self.chance_to_crash = chance_to_crash
+        super().__init__(*args, **kwargs)
 
     def displayAlertBehaviour(self):
         print("Jedzie Karetka!")
 
-    def propagateEmergencyVehicleInfo(self, message: spade.message.Message):
+    async def propagateEmergencyVehicleInfo(self, message: spade.message.Message):
         nearby_vehicles = self.env.get_nearby_vehicles(self.vehicle, 5)
         for vehicle in nearby_vehicles:
             msg = spade.message.Message(to=vehicle.id)
@@ -25,18 +33,19 @@ class TrafficParticipantAgent(spade.agent.Agent):
             await self.send(msg)
 
     def createAccidentMessagebody(self, x: float, y: float) -> str:
-        dictionary = {'X': x, 'Y': y, 'message': "Accident happened, help needed"}
+        dictionary = {"x": x, "y": y, "message": "Accident happened, help needed"}
         return json.dumps(dictionary)
 
-    def informManagerAfterAccident(self, x: float, y: float):
+    async def informManagerAfterAccident(self, x: float, y: float):
         msg = spade.message.Message(to="manager@localhost")
         msg.set_metadata("performative", "inform")
         msg.set_metadata("msgType", "accidentInfo")
         msg.body = self.createAccidentMessagebody(x, y)
         await self.send(msg)
 
-    def accidentHappened(self):
-        self.helpDispatched = False
+    def crash(self):
+        self.is_crashed = True
+        self.is_help_dispatched = False
         self.add_behaviour(self.InformManagerBehaviour(agent=self))
 
     class InformManagerBehaviour(spade.behaviour.CyclicBehaviour):
@@ -48,7 +57,9 @@ class TrafficParticipantAgent(spade.agent.Agent):
             if self.agent.helpDispatched:
                 self.kill()
             else:
-                self.agent.informManagerAfterAccident(self.agent.vehicle.x, self.agent.vehicle.y)
+                self.agent.informManagerAfterAccident(
+                    self.agent.vehicle.x, self.agent.vehicle.y
+                )
                 await asyncio.sleep(1)
 
     class HandleForEmergencyVehicleIncomingBehaviour(spade.behaviour.CyclicBehaviour):
@@ -72,12 +83,13 @@ class TrafficParticipantAgent(spade.agent.Agent):
                 print("Help is arriving in: " + msg.body)
                 self.agent.helpDispatched = True
 
-
     async def setup(self):
-        print(self.jid + " is starting")
+        print(str(self.jid) + " is starting")
         t1 = Template()
         t1.set_metadata("msgType", "evLocationData")
-        self.add_behaviour(self.HandleForEmergencyVehicleIncomingBehaviour(agent=self), template=t1)
+        self.add_behaviour(
+            self.HandleForEmergencyVehicleIncomingBehaviour(agent=self), template=t1
+        )
         t2 = Template()
         t2.set_metadata("msgType", "helpArrivalInfo")
         self.add_behaviour(self.HandleHelpArrivalInfoBehaviour(agent=self), template=t2)

@@ -36,8 +36,6 @@ class Environment:
 
     def move_vehicles(self):
         for vehicle in self.vehicles:
-            if random() < 0.3:
-                vehicle.random_direction_change()
             vehicle.move(self.width - self.obj_size, self.height - self.obj_size)
 
     def make_random_accident(self) -> str:
