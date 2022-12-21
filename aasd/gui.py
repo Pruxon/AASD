@@ -1,83 +1,66 @@
 from tkinter import *
-from random import randint, random, choice
+from random import random, choice
 
-from aasd.environment import VehicleType
+from aasd.environment import Environment
+from aasd.vehicle import Vehicle, VehicleType
 
 
 class MovementSimulationWindow:
-    def __init__(self, width: int = 1280, height: int = 720, vehicle_size: int = 10):
+    def __init__(self, environment: Environment):
         self.window = Tk()
         self.canvas = Canvas(
             self.window,
             bg='black',
-            height=height,
-            width=width,
+            height=environment.height,
+            width=environment.width,
         )
-        self.v_size = vehicle_size
-        self.width = width
-        self.height = height
+        self.environment = environment
+        self.obj_size = environment.obj_size
         self.left_up_offset = 5
-        self.vehicles: dict[str, int] = {}
-
+        self.objects: dict[str, int] = {}
+        for v in environment.vehicles:
+            self.add_object(v.id, v.type, int(v.x), int(v.y))
         self.canvas.pack(padx=1, pady=1)
 
-    def add_vehicle(self, vehicle_id: str, vehicle_type: VehicleType, x: int, y: int):
-        color = None
-        if vehicle_type is VehicleType.Emergency:
-            color = 'red'
-        elif vehicle_type is VehicleType.Normal:
-            color = 'blue'
-        elif vehicle_type is VehicleType.Crashed:
-            color = 'yellow'
+    def add_object(self, vehicle_id: str, vehicle_type: VehicleType, x: int, y: int):
+        color = get_color(vehicle_type)
+        assert vehicle_id not in self.objects.keys()
+        self.objects[vehicle_id] = self.canvas.create_oval(x, y, x + self.obj_size, y + self.obj_size, fill=color)
 
-        assert vehicle_id not in self.vehicles.keys()
-
-        self.vehicles[vehicle_id] = self.canvas.create_oval(x, y, x + self.v_size, y + self.v_size, fill=color)
-
-    def start(self):
-        for vehicle_id, vehicle in self.vehicles.items():
-            random_x_movement = 0  # randint(-5, 6)
-            random_y_movement = 0  # randint(-5, 6)
-            if random() < 0.5:
-                random_x_movement = choice([1, 2, 3, -1, -2, -3])
-            else:
-                random_y_movement = choice([1, 2, 3, -1, -2, -3])
-            x, y = self.get_vehicle_coordinates(vehicle)
-            x_movement, y_movement = self.ensure_movement_correct(x, y, random_x_movement, random_y_movement)
-            print(f'vehicleId: {vehicle_id}, x: {x}, y: {y}, x_move:{x_movement}, y_move: {y_movement}')
-            self.canvas.move(vehicle, x_movement, y_movement)  # TODO: funkcja moveto(id, x, y) do przesunięcia na wyznaczone współrzędne
-
-        self.canvas.after(50, self.start)
-
-    def get_vehicle_coordinates(self, vehicle) -> tuple[int, int]:
-        x, y, _, _ = self.canvas.coords(vehicle)
+    def get_object_coordinates(self, obj) -> tuple[int, int]:
+        x, y, _, _ = self.canvas.coords(obj)
         return x, y
 
-    def ensure_movement_correct(self, x: int, y: int, x_move: int, y_move: int):
-        corrected_x_movement = 0
-        corrected_y_movement = 0
-        if x + x_move < self.left_up_offset:
-            corrected_x_movement = self.left_up_offset - x
-        elif x + x_move > self.width - self.v_size:
-            corrected_x_movement = self.width - self.v_size - x
-        else:
-            corrected_x_movement = x_move
+    def start(self):
+        self.environment.move_vehicles()
+        for v in self.environment.vehicles:
+            obj = self.objects[v.id]
+            self.canvas.itemconfig(obj, fill=get_color(v.type))
+            self.canvas.moveto(obj, int(v.x), int(v.y))
 
-        if y + y_move < self.left_up_offset:
-            corrected_y_movement = self.left_up_offset - y
-        elif y + y_move > self.height - self.v_size:
-            corrected_y_movement = self.height - self.v_size - y
-        else:
-            corrected_y_movement = y_move
+        self.canvas.after(20, self.start)
 
-        return corrected_x_movement, corrected_y_movement
+
+def get_color(vehicle_type: VehicleType) -> str:
+    if vehicle_type is VehicleType.Emergency:
+        return 'red'
+    elif vehicle_type is VehicleType.Normal:
+        return 'blue'
+    elif vehicle_type is VehicleType.Crashed:
+        return 'yellow'
 
 
 if __name__ == "__main__":
-    simulation = MovementSimulationWindow()
-    simulation.add_vehicle('1', VehicleType.Emergency, 200, 200)
-    simulation.add_vehicle('2', VehicleType.Normal, 600, 600)
-    simulation.add_vehicle('3', VehicleType.Crashed, 400, 700)
+    env = Environment()
+    vehicles = [
+        Vehicle('1', 200, 200, vehicle_type=VehicleType.Emergency),
+        Vehicle('2', 600, 600),
+        Vehicle('3', 400, 700, vehicle_type=VehicleType.Crashed)
+    ]
+    for vehicle in vehicles:
+        env.register_vehicle(vehicle)
+
+    simulation = MovementSimulationWindow(env)
 
     simulation.start()
 
