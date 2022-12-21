@@ -43,11 +43,11 @@ class MovementSimulationWindow:
 
 def get_color(vehicle_type: VehicleType) -> str:
     if vehicle_type is VehicleType.Emergency:
-        return 'red'
-    elif vehicle_type is VehicleType.Normal:
         return 'blue'
-    elif vehicle_type is VehicleType.Crashed:
+    elif vehicle_type is VehicleType.Normal:
         return 'yellow'
+    elif vehicle_type is VehicleType.Crashed:
+        return 'red'
 
 
 if __name__ == "__main__":
