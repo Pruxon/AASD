@@ -4,6 +4,7 @@ import json as json
 from spade.template import Template
 from aasd.environment import Environment
 from aasd.vehicle import Vehicle, VehicleType
+from math import dist
 
 
 class TrafficParticipantAgent(spade.agent.Agent):
@@ -86,7 +87,20 @@ class TrafficParticipantAgent(spade.agent.Agent):
         async def run(self):
             msg = await self.receive()
             if msg:
-                self.agent.propagateEmergencyVehicleInfo(self=self.agent, message=msg)
+                body = msg.body
+                x=body["x"]
+                y=body["y"]
+                ev_coordinates = tuple[x, y]
+                direction=body["direction"]
+                if self.check_if_ev_is_nearby(ev_coordinates, 40):
+                    self.agent.vehicle.change_direction(direction=self.calculate_direction(ev_coordinates= ev_coordinates, ev_direction=direction))
+                    self.agent.propagateEmergencyVehicleInfo(self=self.agent, message=msg)
+
+        def check_if_ev_is_nearby(self, ev_coordinates: tuple[float, float], radius: float) -> bool:
+            return dist(self.agent.vehicle.get_coordinates(), ev_coordinates) <= radius
+
+        def calculate_direction(self, ev_coordinates: tuple[float, float], ev_direction: float) -> float:
+
 
     class HandleHelpArrivalInfoBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
