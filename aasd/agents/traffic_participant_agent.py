@@ -92,6 +92,9 @@ class TrafficParticipantAgent(spade.agent.Agent):
 
                 await asyncio.sleep(1)
 
+'''
+Behaviour launching after getting message from Manager that help is arriving
+'''
     class WaitForEmergencyVehicleBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, ev_id: str, **kwargs):
             self.agent = agent
@@ -107,6 +110,9 @@ class TrafficParticipantAgent(spade.agent.Agent):
             else:
                 await asyncio.sleep(0.1)
 
+'''
+Behaviour for reveiving and propagating evLocationData message
+'''
     class HandleEmergencyVehicleInfoIncomingBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
@@ -133,7 +139,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
                     self.agent.propagateEmergencyVehicleInfo(
                         self=self.agent, message=msg
                     )
-
+#TODO poprawic tu bo wywala na dist, jedno printuje [x,y] drugie (x,y) xD
         def check_if_ev_is_nearby(
             self, ev_coordinates: tuple[float, float], radius: float
         ) -> bool:
@@ -166,7 +172,9 @@ class TrafficParticipantAgent(spade.agent.Agent):
             await asyncio.sleep(0.1)
             if not self.agent.is_crashed and random() < self.agent.chance_to_crash:
                 self.agent.crash()
-
+'''
+Behaviour for handling message with Arrival info, launches waiting for emergency
+'''
     class HandleHelpArrivalInfoBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
