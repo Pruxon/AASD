@@ -1,6 +1,7 @@
 import time
 import asyncio
 from tkinter import *
+import threading
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
@@ -55,8 +56,13 @@ if __name__ == "__main__":
     ev1_user = UserToRegister("ev1")
     ev2_user = UserToRegister("ev2")
     tp1_user = UserToRegister("tp1")
+    tp2_user = UserToRegister("tp2")
+    tp3_user = UserToRegister("tp3")
+    tp4_user = UserToRegister("tp4")
 
-    register_users_to_ejabberd([manager_user, ev1_user, ev2_user, tp1_user])
+    register_users_to_ejabberd(
+        [manager_user, ev1_user, ev2_user, tp1_user, tp2_user, tp3_user, tp4_user]
+    )
 
     manager = ManagerAgent(manager_user.jid_str(), manager_user.password)
     manager.start().wait()
@@ -78,17 +84,46 @@ if __name__ == "__main__":
     tp1_v = Vehicle(tp1_user.jid_str(), 500, 500, vehicle_type=VehicleType.Normal)
     env.register_vehicle(tp1_v)
     tp1 = TrafficParticipantAgent(
-        vehicle=tp1_v, env=env, jid=tp1_user.jid_str(), password=tp1_user.password
+        vehicle=tp1_v,
+        env=env,
+        jid=tp1_user.jid_str(),
+        password=tp1_user.password,
+        chance_to_crash=0.01,
     )
     tp1.start().wait()
 
-    # vehicles = [
-    #     Vehicle("1", 200, 200, vehicle_type=VehicleType.Emergency),
-    #     Vehicle("2", 600, 600),
-    #     Vehicle("3", 400, 700, vehicle_type=VehicleType.Crashed),
-    # ]
-    # for vehicle in vehicles:
-    #     env.register_vehicle(vehicle)
+    tp2_v = Vehicle(tp2_user.jid_str(), 500, 500, vehicle_type=VehicleType.Normal)
+    env.register_vehicle(tp2_v)
+    tp2 = TrafficParticipantAgent(
+        vehicle=tp2_v,
+        env=env,
+        jid=tp2_user.jid_str(),
+        password=tp2_user.password,
+        chance_to_crash=0.01,
+    )
+    tp2.start().wait()
+
+    tp3_v = Vehicle(tp3_user.jid_str(), 500, 500, vehicle_type=VehicleType.Normal)
+    env.register_vehicle(tp3_v)
+    tp3 = TrafficParticipantAgent(
+        vehicle=tp3_v,
+        env=env,
+        jid=tp3_user.jid_str(),
+        password=tp3_user.password,
+        chance_to_crash=0.01,
+    )
+    tp3.start().wait()
+
+    tp4_v = Vehicle(tp4_user.jid_str(), 500, 500, vehicle_type=VehicleType.Normal)
+    env.register_vehicle(tp4_v)
+    tp4 = TrafficParticipantAgent(
+        vehicle=tp4_v,
+        env=env,
+        jid=tp4_user.jid_str(),
+        password=tp4_user.password,
+        chance_to_crash=0.01,
+    )
+    tp4.start().wait()
 
     simulation = MovementSimulationWindow(env)
 

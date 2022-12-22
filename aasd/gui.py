@@ -10,7 +10,7 @@ class MovementSimulationWindow:
         self.window = Tk()
         self.canvas = Canvas(
             self.window,
-            bg='black',
+            bg="black",
             height=environment.height,
             width=environment.width,
         )
@@ -25,7 +25,9 @@ class MovementSimulationWindow:
     def add_object(self, vehicle_id: str, vehicle_type: VehicleType, x: int, y: int):
         color = get_color(vehicle_type)
         assert vehicle_id not in self.objects.keys()
-        self.objects[vehicle_id] = self.canvas.create_oval(x, y, x + self.obj_size, y + self.obj_size, fill=color)
+        self.objects[vehicle_id] = self.canvas.create_oval(
+            x, y, x + self.obj_size, y + self.obj_size, fill=color
+        )
 
     def get_object_coordinates(self, obj) -> tuple[int, int]:
         x, y, _, _ = self.canvas.coords(obj)
@@ -43,19 +45,19 @@ class MovementSimulationWindow:
 
 def get_color(vehicle_type: VehicleType) -> str:
     if vehicle_type is VehicleType.Emergency:
-        return 'blue'
+        return "blue"
     elif vehicle_type is VehicleType.Normal:
-        return 'yellow'
+        return "yellow"
     elif vehicle_type is VehicleType.Crashed:
-        return 'red'
+        return "red"
 
 
 if __name__ == "__main__":
     env = Environment()
     vehicles = [
-        Vehicle('1', 200, 200, vehicle_type=VehicleType.Emergency),
-        Vehicle('2', 600, 600),
-        Vehicle('3', 400, 700, vehicle_type=VehicleType.Crashed)
+        Vehicle("1", 200, 200, vehicle_type=VehicleType.Emergency),
+        Vehicle("2", 600, 600),
+        Vehicle("3", 400, 700, vehicle_type=VehicleType.Crashed),
     ]
     for vehicle in vehicles:
         env.register_vehicle(vehicle)

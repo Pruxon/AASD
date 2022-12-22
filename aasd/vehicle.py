@@ -9,6 +9,10 @@ class VehicleType(Enum):
     Crashed = 3
 
 
+DEFAULT_SPEED = 3.0
+DEFAULT_CHANCE_TO_CHANGE_DIRECTION = 0.01
+
+
 class Vehicle:
     def __init__(
         self,
@@ -23,8 +27,8 @@ class Vehicle:
         self.y = y
         self.direction = direction
         self.type = vehicle_type
-        self.speed = 3.0
-        self.random_direction_change_chance = 0.01
+        self.speed = DEFAULT_SPEED
+        self.random_direction_change_chance = DEFAULT_CHANCE_TO_CHANGE_DIRECTION
         self.stop_counter: int = 0  # ile razy nie zmienił położenia
 
     def move(self, max_x: int, max_y: int):
@@ -83,4 +87,10 @@ class Vehicle:
     def continue_moving(self):
         self.speed = self.last_not_stopped_speed
         if self.speed == 0.0:
-            self.speed = 1.0
+            self.speed = DEFAULT_SPEED
+
+    def disable_random_direction_changes(self):
+        self.random_direction_change_chance = 0.0
+
+    def enable_random_direction_changes(self):
+        self.random_direction_change_chance = DEFAULT_CHANCE_TO_CHANGE_DIRECTION

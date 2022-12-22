@@ -59,6 +59,9 @@ class ManagerAgent(spade.agent.Agent):
                 y = accident_info["y"]
 
                 ev_to_dispatch = self.choose_closest_ev(dispatchable_evs, x, y)
+                ev_to_dispatch.assigned = True
+                self.agent.emergency_vehicles[ev_to_dispatch.id] = ev_to_dispatch
+
                 msg = Message(to=ev_to_dispatch.id)
                 msg.set_metadata("performative", "inform")
                 msg.set_metadata("msgType", "processedAccidentInfo")

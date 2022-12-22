@@ -9,7 +9,9 @@ class Environment:
         self.height = height
         self.obj_size: int = object_size
         self.vehicles: list[Vehicle] = []
-        self.location_cache: dict[str, tuple[float, float]] = {}  # mapowanie id pojazdu na wspólrzędne x, y
+        self.location_cache: dict[
+            str, tuple[float, float]
+        ] = {}  # mapowanie id pojazdu na wspólrzędne x, y
 
     def register_vehicle(self, vehicle: Vehicle):
         self.vehicles.append(vehicle)
@@ -20,10 +22,18 @@ class Environment:
         self.location_cache.pop(vehicle.id)
 
     def get_emergency_vehicles(self) -> list[Vehicle]:
-        return [vehicle for vehicle in self.vehicles if vehicle.type is VehicleType.Emergency]
+        return [
+            vehicle
+            for vehicle in self.vehicles
+            if vehicle.type is VehicleType.Emergency
+        ]
 
     def get_nearby_vehicles(self, caller: Vehicle, radius: float):
-        return [vehicle for vehicle in self.vehicles if is_nearby(vehicle, caller, radius)]
+        return [
+            vehicle
+            for vehicle in self.vehicles
+            if is_nearby(vehicle, caller, radius) and vehicle is not caller
+        ]
 
     def get_random_coordinates(self) -> tuple[float, float]:
         x = random() * self.width + 5
@@ -58,4 +68,3 @@ class Environment:
 
 def is_nearby(vehicle1: Vehicle, vehicle2: Vehicle, radius: float) -> bool:
     return dist(vehicle1.get_coordinates(), vehicle2.get_coordinates()) <= radius
-
