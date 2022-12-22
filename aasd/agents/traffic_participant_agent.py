@@ -183,7 +183,7 @@ Behaviour for handling message with Arrival info, launches waiting for emergency
             if msg:
                 print("Help is arriving in: " + msg.body)
                 ev_info = json.loads(msg.body)
-                evId = ev_info["vehicle_id"]
+                evId = ev_info["ev_id"]
                 self.agent.is_help_dispatched = True
                 self.agent.add_behaviour(
                     self.agent.WaitForEmergencyVehicleBehaviour(
