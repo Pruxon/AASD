@@ -4,7 +4,8 @@ import json as json
 from spade.template import Template
 from aasd.environment import Environment
 from aasd.vehicle import Vehicle, VehicleType
-from math import dist
+from math import dist, sin, cos, radians
+from numpy import sign
 
 
 class TrafficParticipantAgent(spade.agent.Agent):
@@ -93,13 +94,23 @@ class TrafficParticipantAgent(spade.agent.Agent):
                 ev_coordinates = tuple[x, y]
                 direction=body["direction"]
                 if self.check_if_ev_is_nearby(ev_coordinates, 40):
-                    self.agent.vehicle.change_direction(direction=self.calculate_direction(ev_coordinates= ev_coordinates, ev_direction=direction))
+                    self.agent.vehicle.change_direction(direction=self.calculate_direction(x1=x, y1=y, ev_direction=direction))
                     self.agent.propagateEmergencyVehicleInfo(self=self.agent, message=msg)
 
         def check_if_ev_is_nearby(self, ev_coordinates: tuple[float, float], radius: float) -> bool:
             return dist(self.agent.vehicle.get_coordinates(), ev_coordinates) <= radius
 
-        def calculate_direction(self, ev_coordinates: tuple[float, float], ev_direction: float) -> float:
+        def calculate_direction(self, x1: float, y1: float, ev_direction: float) -> float:
+            x = self.agent.vehicle.x
+            y = self.agent.vehicle.y
+            x2 = self.ev_x + sin(radians(self.ev_direction)) * 3.0
+            y2 = self.ev_y + cos(radians(self.ev_direction)) * 3.0
+            position = sign((x-x1)*(y2-y1)-(y-y1)*(x2-x1))
+
+            if position >= 0:
+                return ev_direction+90.0
+            else:
+                return ev_direction-90.0
 
 
     class HandleHelpArrivalInfoBehaviour(spade.behaviour.CyclicBehaviour):
