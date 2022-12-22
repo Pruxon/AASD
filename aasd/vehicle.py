@@ -21,18 +21,21 @@ class Vehicle:
         y: float = 5.0,
         direction: float = 90.0,  # Domyślnie w prawo
         vehicle_type: VehicleType = VehicleType.Normal,
+        speed: float = DEFAULT_SPEED,
+        random_direction_change_chance: float = DEFAULT_CHANCE_TO_CHANGE_DIRECTION
     ):
         self.id = vehicle_id
         self.x = x
         self.y = y
         self.direction = direction
         self.type = vehicle_type
-        self.speed = DEFAULT_SPEED
-        self.random_direction_change_chance = DEFAULT_CHANCE_TO_CHANGE_DIRECTION
+        self.speed = speed
+        self.random_direction_change_chance = random_direction_change_chance
         self.stop_counter: int = 0  # ile razy nie zmienił położenia
+        self.previous_speed: float = 0.0
 
     def move(self, max_x: int, max_y: int):
-        if random() < self.random_direction_change_chance * self.speed:
+        if random() < self.random_direction_change_chance:
             self.random_direction_change()
 
         x = self.x + sin(radians(self.direction)) * self.speed
@@ -81,11 +84,11 @@ class Vehicle:
         self.speed = speed
 
     def stop(self):
-        self.last_not_stopped_speed = self.speed
+        self.previous_speed = self.speed
         self.speed = 0.0
 
     def continue_moving(self):
-        self.speed = self.last_not_stopped_speed
+        self.speed = self.previous_speed
         if self.speed == 0.0:
             self.speed = DEFAULT_SPEED
 

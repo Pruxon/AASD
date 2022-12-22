@@ -1,8 +1,11 @@
 import spade as spade
+from spade.agent import Agent
+from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 from spade.template import Template
 
 from dataclasses import dataclass
+from aasd.environment import Environment
 import json
 from math import sqrt
 
@@ -15,8 +18,12 @@ class EvStatus:
     assigned: bool
 
 
-class ManagerAgent(spade.agent.Agent):
-    class HandleAccidentInfoBehaviour(spade.behaviour.CyclicBehaviour):
+class ManagerAgent(Agent):
+    def __init__(self, env: Environment, *args, **kwargs):
+        self.env = env
+        super().__init__(*args, **kwargs)
+
+    class HandleAccidentInfoBehaviour(CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
             super().__init__(**kwargs)
@@ -58,6 +65,8 @@ class ManagerAgent(spade.agent.Agent):
                 x = accident_info["x"]
                 y = accident_info["y"]
 
+                # ev_to_dispatch = self.agent.env.get_closest_emergency_vehicle(x, y)
+
                 ev_to_dispatch = self.choose_closest_ev(dispatchable_evs, x, y)
                 ev_to_dispatch.assigned = True
                 self.agent.emergency_vehicles[ev_to_dispatch.id] = ev_to_dispatch
@@ -79,7 +88,7 @@ class ManagerAgent(spade.agent.Agent):
                     f"ManagerAgent: dispatched EV={ev_to_dispatch.id} to {msg_sender}"
                 )
 
-    class HandleEmergencyVehicleInfoBehaviour(spade.behaviour.CyclicBehaviour):
+    class HandleEmergencyVehicleInfoBehaviour(CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
             super().__init__(**kwargs)
@@ -112,7 +121,6 @@ class ManagerAgent(spade.agent.Agent):
                 )
 
     async def setup(self) -> None:
-        self.agent = self
         print("Manager is starting")
         self.emergency_vehicles: dict[str, EvStatus] = {}
         self.accident_vehicle_to_ev: dict[str, str] = {}

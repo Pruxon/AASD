@@ -14,7 +14,6 @@ class TrafficParticipantAgent(spade.agent.Agent):
         self,
         vehicle: Vehicle,
         env: Environment,
-        chance_to_crash: float = 0.0,
         *args,
         **kwargs,
     ):
@@ -22,7 +21,6 @@ class TrafficParticipantAgent(spade.agent.Agent):
         self.env = env
         self.is_crashed = False
         self.is_help_dispatched = False
-        self.chance_to_crash = chance_to_crash
         super().__init__(*args, **kwargs)
 
     def prune_behaviours(self):
@@ -99,7 +97,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
             super().__init__(**kwargs)
 
         async def run(self):
-            if self.agent.env.is_nearby_by_id(self.agent.vehicle.id, self.ev_id, 10.0):
+            if self.agent.env.are_vehicles_nearby(self.agent.vehicle.id, self.ev_id, 10.0):
                 await asyncio.sleep(0.5)
                 self.agent.vehicle.continue_moving()
                 self.agent.vehicle.type = VehicleType.Normal
@@ -164,7 +162,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
 
         async def run(self):
             await asyncio.sleep(0.1)
-            if not self.agent.is_crashed and random() < self.agent.chance_to_crash:
+            if not self.agent.is_crashed and random() < self.agent.environment.chance_to_crash:
                 self.agent.crash()
 
     class HandleHelpArrivalInfoBehaviour(spade.behaviour.CyclicBehaviour):
@@ -177,7 +175,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
             if msg:
                 print("Help is arriving in: " + msg.body)
                 ev_info = json.loads(msg.body)
-                evId = ev_info["ev_id"]
+                evId = ev_info["vehicle_id"]
                 self.agent.is_help_dispatched = True
                 self.agent.add_behaviour(
                     self.agent.WaitForEmergencyVehicleBehaviour(

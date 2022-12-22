@@ -1,14 +1,17 @@
+from math import dist, inf
+from typing import Optional
 from random import random, choice
-from math import dist
-from .vehicle import Vehicle, VehicleType
+
+from aasd.vehicle import Vehicle, VehicleType
 
 
 class Environment:
-    def __init__(self, width: int = 1280, height: int = 720, object_size: int = 10):
+    def __init__(self, width: int = 1280, height: int = 720, object_size: int = 10, chance_to_crash: float = 0.01):
         self.width = width
         self.height = height
         self.obj_size: int = object_size
         self.vehicles: list[Vehicle] = []
+        self.chance_to_crash: float = chance_to_crash
         self.location_cache: dict[
             str, tuple[float, float]
         ] = {}  # mapowanie id pojazdu na wspólrzędne x, y
@@ -53,18 +56,29 @@ class Environment:
         vehicle.type = VehicleType.Crashed
         return vehicle.id
 
-    def findVehicleIndex(self, ev_id: str) -> Vehicle:
+    def get_vehicle(self, vehicle_id: str) -> Optional[Vehicle]:
         for vehicle in self.vehicles:
-            if vehicle.id == ev_id:
+            if vehicle.id == vehicle_id:
                 return vehicle
         else:
             return None
 
-    def is_nearby_by_id(self, id1: str, id2: str, radius: float) -> bool:
-        vehicle1 = self.findVehicleIndex(id1)
-        vehicle2 = self.findVehicleIndex(id2)
-        return dist(vehicle1.get_coordinates(), vehicle2.get_coordinates()) <= radius
+    def get_closest_emergency_vehicle(self, x: float, y: float):
+        emergency_vehicles = [v for v in self.vehicles if v.type is VehicleType.Emergency]
+        closest_ev = None
+        lowest_distance = inf
+        for ev in emergency_vehicles:
+            distance = dist(ev.get_coordinates(), (x, y))
+            if distance < lowest_distance:
+                lowest_distance = distance
+                closest_ev = ev
+        return closest_ev
+
+    def are_vehicles_nearby(self, id1: str, id2: str, radius: float) -> bool:
+        return is_nearby(self.get_vehicle(id1), self.get_vehicle(id2), radius)
 
 
-def is_nearby(vehicle1: Vehicle, vehicle2: Vehicle, radius: float) -> bool:
+def is_nearby(vehicle1: Optional[Vehicle], vehicle2: Optional[Vehicle], radius: float) -> bool:
+    if vehicle1 is None or vehicle2 is None:
+        return False
     return dist(vehicle1.get_coordinates(), vehicle2.get_coordinates()) <= radius
