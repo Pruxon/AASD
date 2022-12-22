@@ -36,7 +36,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
         t1 = Template()
         t1.set_metadata("msgType", "evLocationData")
         self.add_behaviour(
-            self.HandleEmergencyVehicleIncomingBehaviour(agent=self), template=t1
+            self.HandleEmergencyVehicleInfoIncomingBehaviour(agent=self), template=t1
         )
         self.add_behaviour(self.RandomCrashBehaviour(agent=self))
 
@@ -54,10 +54,10 @@ class TrafficParticipantAgent(spade.agent.Agent):
         self.add_behaviour(self.WaitForEmergencyVehicleBehaviour(agent=self))
 
     async def propagateEmergencyVehicleInfo(self, message: spade.message.Message):
-        nearby_vehicles = self.env.get_nearby_vehicles(self.vehicle, 5)
+        nearby_vehicles = self.env.get_nearby_vehicles(self.vehicle, 50)
         for vehicle in nearby_vehicles:
             msg = spade.message.Message(to=vehicle.id)
-            msg.set_metadata("msgType", "emergencyVehicleInfo")
+            msg.set_metadata("msgType", "evLocationData")
             msg.body = message.body
             await self.send(msg)
 
@@ -107,7 +107,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
             else:
                 await asyncio.sleep(0.1)
 
-    class HandleEmergencyVehicleIncomingBehaviour(spade.behaviour.CyclicBehaviour):
+    class HandleEmergencyVehicleInfoIncomingBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
             super().__init__(**kwargs)
@@ -115,17 +115,21 @@ class TrafficParticipantAgent(spade.agent.Agent):
         async def run(self):
             msg = await self.receive()
             if msg:
-                body = msg.body
+                print("BBBBBBBBBBBBBBBBBBB")
+                body = json.loads(msg.body)
                 x = body["x"]
                 y = body["y"]
                 ev_coordinates = tuple[x, y]
+                print(ev_coordinates)
                 direction = body["direction"]
-                if self.check_if_ev_is_nearby(ev_coordinates, 40):
+                if self.check_if_ev_is_nearby(ev_coordinates, 100.0):
+                    print("AAAAAAAAAAAAAAAAAAAAAAAAA")
                     self.agent.vehicle.change_direction(
                         direction=self.calculate_direction(
                             x1=x, y1=y, ev_direction=direction
                         )
                     )
+                    print("ev dir: " + direction + " ev coords" + ev_coordinates + " own dir" + self.agent.vehicle.get_direction() + " own coords:" + self.agent.vehicle.get_coordinates())
                     self.agent.propagateEmergencyVehicleInfo(
                         self=self.agent, message=msg
                     )
@@ -133,7 +137,11 @@ class TrafficParticipantAgent(spade.agent.Agent):
         def check_if_ev_is_nearby(
             self, ev_coordinates: tuple[float, float], radius: float
         ) -> bool:
-            return dist(self.agent.vehicle.get_coordinates(), ev_coordinates) <= radius
+            print(ev_coordinates)
+            a = tuple[self.agent.vehicle.x, self.agent.vehicle.y]
+            print(self.agent.vehicle.get_coordinates())
+            print("CCCCCCCCCCCCCCCCCCCCCCCCCCC")
+            return dist(a, ev_coordinates) <= radius
 
         def calculate_direction(
             self, x1: float, y1: float, ev_direction: float

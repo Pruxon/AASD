@@ -83,10 +83,10 @@ class EmergencyVehicleAgent(spade.agent.Agent):
 
         async def run(self):
             await asyncio.sleep(2)
-            nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 10)
+            nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 100)
             for vehicle in nearby_vehicles:
                 msg = spade.message.Message(to=vehicle.id)
-                msg.set_metadata("msgType", "emergencyVehicleInfo")
+                msg.set_metadata("msgType", "evLocationData")
                 x, y = self.agent.vehicle.get_coordinates()
                 msg.body = json.dumps(
                     {"x": x, "y": y, "direction": self.agent.vehicle.get_direction()}
