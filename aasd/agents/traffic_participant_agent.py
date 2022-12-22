@@ -51,13 +51,6 @@ class TrafficParticipantAgent(spade.agent.Agent):
         self.prune_behaviours()
         self.add_behaviour(self.WaitForEmergencyVehicleBehaviour(agent=self))
 
-    async def propagateEmergencyVehicleInfo(self, message: spade.message.Message):
-        nearby_vehicles = self.env.get_nearby_vehicles(self.vehicle, 50)
-        for vehicle in nearby_vehicles:
-            msg = spade.message.Message(to=vehicle.id)
-            msg.set_metadata("msgType", "evLocationData")
-            msg.body = message.body
-            await self.send(msg)
 
     def createAccidentMessagebody(x: float, y: float) -> str:
         dictionary = {"x": x, "y": y, "message": "Accident happened, help needed"}
@@ -87,7 +80,6 @@ class TrafficParticipantAgent(spade.agent.Agent):
                     {"x": x, "y": y, "message": "Accident happened, help needed"}
                 )
                 await self.send(msg)
-
                 await asyncio.sleep(1)
 
     '''
@@ -119,47 +111,51 @@ class TrafficParticipantAgent(spade.agent.Agent):
         async def run(self):
             msg = await self.receive()
             if msg:
-                print("BBBBBBBBBBBBBBBBBBB")
                 body = json.loads(msg.body)
                 x = body["x"]
                 y = body["y"]
-                ev_coordinates = tuple[x, y]
-                print(ev_coordinates)
+                ev_coordinates = (x, y)
                 direction = body["direction"]
                 if self.check_if_ev_is_nearby(ev_coordinates, 100.0):
-                    print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+                    direct = self.calculate_direction(x1=x, y1=y, ev_direction=direction)
                     self.agent.vehicle.change_direction(
-                        direction=self.calculate_direction(
-                            x1=x, y1=y, ev_direction=direction
-                        )
+                        direction=direct
                     )
-                    print("ev dir: " + direction + " ev coords" + ev_coordinates + " own dir" + self.agent.vehicle.get_direction() + " own coords:" + self.agent.vehicle.get_coordinates())
-                    self.agent.propagateEmergencyVehicleInfo(
-                        self=self.agent, message=msg
+                    print("AAAAAAAAAAAAAAAAAAAA")
+                    print("ev dir: " + str(direction) + " ev coords" + str(ev_coordinates) + " own dir " + str(direct) + " own coords:" + str(self.agent.vehicle.get_coordinates()))
+                    await self.propagate_emergency_vehicle_info(
+                        message=msg
                     )
-#TODO poprawic tu bo wywala na dist, jedno printuje [x,y] drugie (x,y) xD
+
+        async def propagate_emergency_vehicle_info(self, message: spade.message.Message):
+            nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 50)
+            for vehicle in nearby_vehicles:
+                msg = spade.message.Message(to=vehicle.id)
+                msg.set_metadata("msgType", "evLocationData")
+                msg.body = message.body
+                await self.send(msg)
+                print("Propagating signalt to:" + vehicle.id)
+
         def check_if_ev_is_nearby(
             self, ev_coordinates: tuple[float, float], radius: float
         ) -> bool:
-            print(ev_coordinates)
-            a = tuple[self.agent.vehicle.x, self.agent.vehicle.y]
-            print(self.agent.vehicle.get_coordinates())
-            print("CCCCCCCCCCCCCCCCCCCCCCCCCCC")
-            return dist(a, ev_coordinates) <= radius
+            coords = (self.agent.vehicle.x, self.agent.vehicle.y)
+            distance = dist(coords, ev_coordinates)
+            return distance <= radius
 
         def calculate_direction(
             self, x1: float, y1: float, ev_direction: float
         ) -> float:
             x = self.agent.vehicle.x
             y = self.agent.vehicle.y
-            x2 = self.ev_x + sin(radians(self.ev_direction)) * 3.0
-            y2 = self.ev_y + cos(radians(self.ev_direction)) * 3.0
+            x2 = x1 + sin(radians(ev_direction)) * 3.0
+            y2 = y1 + cos(radians(ev_direction)) * 3.0
             position = sign((x - x1) * (y2 - y1) - (y - y1) * (x2 - x1))
 
             if position >= 0:
-                return ev_direction + 90.0
+                return (ev_direction + 90.0)%360
             else:
-                return ev_direction - 90.0
+                return (ev_direction - 90.0)%360
 
     class RandomCrashBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
@@ -168,7 +164,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
 
         async def run(self):
             await asyncio.sleep(0.1)
-            if not self.agent.is_crashed and random() < self.agent.environment.chance_to_crash:
+            if not self.agent.is_crashed and random() < self.agent.env.chance_to_crash:
                 self.agent.crash()
     '''
     Behaviour for handling message with Arrival info, launches waiting for emergency
