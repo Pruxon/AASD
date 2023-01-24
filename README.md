@@ -3,7 +3,7 @@
 2. Przejdź do katalogu AASD
 3. Wykonaj polecenie ```docker-compose up -d```
 
-# Wyłączenie servera
+# Wyłączenie serwera
 1. Przejdź do katalogu AASD
 2. Wykonaj polecenie ```docker-compose down```
 
@@ -13,7 +13,7 @@
 2. Wpisz username *admin@localhost*
 3. Wpisz hasło *passw0rd*
 
-# Odpalenie agentów
+# Odpalenie symulacji
 ```sh
 python3.9 -m aasd
 ```
