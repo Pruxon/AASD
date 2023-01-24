@@ -51,7 +51,6 @@ class TrafficParticipantAgent(spade.agent.Agent):
         self.prune_behaviours()
         self.add_behaviour(self.WaitForEmergencyVehicleBehaviour(agent=self))
 
-
     def createAccidentMessagebody(x: float, y: float) -> str:
         dictionary = {"x": x, "y": y, "message": "Accident happened, help needed"}
         return json.dumps(dictionary)
@@ -82,9 +81,10 @@ class TrafficParticipantAgent(spade.agent.Agent):
                 await self.send(msg)
                 await asyncio.sleep(1)
 
-    '''
+    """
     Behaviour launching after getting message from Manager that help is arriving
-    '''
+    """
+
     class WaitForEmergencyVehicleBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, ev_id: str, **kwargs):
             self.agent = agent
@@ -92,7 +92,9 @@ class TrafficParticipantAgent(spade.agent.Agent):
             super().__init__(**kwargs)
 
         async def run(self):
-            if self.agent.env.are_vehicles_nearby(self.agent.vehicle.id, self.ev_id, 10.0):
+            if self.agent.env.are_vehicles_nearby(
+                self.agent.vehicle.id, self.ev_id, 10.0
+            ):
                 await asyncio.sleep(0.5)
                 self.agent.vehicle.continue_moving()
                 self.agent.vehicle.type = VehicleType.Normal
@@ -100,9 +102,10 @@ class TrafficParticipantAgent(spade.agent.Agent):
             else:
                 await asyncio.sleep(0.1)
 
-    '''
+    """
     Behaviour for reveiving and propagating evLocationData message
-    '''
+    """
+
     class HandleEmergencyVehicleInfoIncomingBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
@@ -116,14 +119,21 @@ class TrafficParticipantAgent(spade.agent.Agent):
                 y = body["y"]
                 ev_coordinates = (x, y)
                 direction = body["direction"]
+                if "ttl" in body:
+                    ttl = body["ttl"]
+                else:
+                    ttl = 8
                 if self.check_if_ev_is_nearby(ev_coordinates, 100.0):
+                    self.agent.vehicle.disable_random_direction_changes()
                     direct = self.calculate_direction(x1=x, y1=y, ev_direction=direction)
                     self.agent.vehicle.change_direction(direction=direct)
-                    self.agent.vehicle.disable_random_direction_changes()
+                    print("ev dir: " + str(direction) + " ev coords" + str(ev_coordinates) + " own dir " + str(direct) + " own coords:" + str(self.agent.vehicle.get_coordinates()))
+                    ttl -= 1
+                    if ttl > 1:
+                        body["ttl"] = ttl
+                        await self.propagate_emergency_vehicle_info(message=msg)
                     await asyncio.sleep(2)
                     self.agent.vehicle.enable_random_direction_changes()
-                    print("ev dir: " + str(direction) + " ev coords" + str(ev_coordinates) + " own dir " + str(direct) + " own coords:" + str(self.agent.vehicle.get_coordinates()))
-                    await self.propagate_emergency_vehicle_info(message=msg)
 
         async def propagate_emergency_vehicle_info(self, message: spade.message.Message):
             nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 50)
@@ -151,9 +161,9 @@ class TrafficParticipantAgent(spade.agent.Agent):
             position = sign((x - x1) * (y2 - y1) - (y - y1) * (x2 - x1))
 
             if position >= 0:
-                return (ev_direction + 90.0)%360
+                return (ev_direction + 90.0) % 360
             else:
-                return (ev_direction - 90.0)%360
+                return (ev_direction - 90.0) % 360
 
     class RandomCrashBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
@@ -164,9 +174,11 @@ class TrafficParticipantAgent(spade.agent.Agent):
             await asyncio.sleep(0.1)
             if not self.agent.is_crashed and random() < self.agent.env.chance_to_crash:
                 self.agent.crash()
-    '''
+
+    """
     Behaviour for handling message with Arrival info, launches waiting for emergency
-    '''
+    """
+
     class HandleHelpArrivalInfoBehaviour(spade.behaviour.CyclicBehaviour):
         def __init__(self, agent, **kwargs):
             self.agent = agent
