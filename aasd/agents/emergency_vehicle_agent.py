@@ -83,7 +83,9 @@ class EmergencyVehicleAgent(spade.agent.Agent):
 
         async def run(self):
             await asyncio.sleep(0.7)
-            nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 100)
+            nearby_vehicles = self.agent.env.get_nearby_vehicles(
+                self.agent.vehicle, 100
+            )
             for vehicle in nearby_vehicles:
                 msg = spade.message.Message(to=vehicle.id)
                 msg.set_metadata("msgType", "evLocationData")
@@ -113,6 +115,9 @@ class EmergencyVehicleAgent(spade.agent.Agent):
                 self.agent.is_assigned = False
                 self.agent.init_undispatched_behaviour()
             await asyncio.sleep(0.1)
+            self.agent.vehicle.change_direction_to_face_coordinates(
+                self.agent.accident_x, self.agent.accident_y
+            )
 
     async def setup(self):
         print(f"{str(self.jid)} starting...")
