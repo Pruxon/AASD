@@ -12,17 +12,12 @@ class Environment:
         self.obj_size: int = object_size
         self.vehicles: list[Vehicle] = []
         self.chance_to_crash: float = chance_to_crash
-        self.location_cache: dict[
-            str, tuple[float, float]
-        ] = {}  # mapowanie id pojazdu na wspólrzędne x, y
 
     def register_vehicle(self, vehicle: Vehicle):
         self.vehicles.append(vehicle)
-        self.location_cache[vehicle.id] = vehicle.x, vehicle.y
 
     def unregister_vehicle(self, vehicle: Vehicle):
         self.vehicles.remove(vehicle)
-        self.location_cache.pop(vehicle.id)
 
     def get_emergency_vehicles(self) -> list[Vehicle]:
         return [

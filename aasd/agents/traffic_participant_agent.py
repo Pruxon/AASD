@@ -121,7 +121,6 @@ class TrafficParticipantAgent(spade.agent.Agent):
                     self.agent.vehicle.change_direction(
                         direction=direct
                     )
-                    print("AAAAAAAAAAAAAAAAAAAA")
                     print("ev dir: " + str(direction) + " ev coords" + str(ev_coordinates) + " own dir " + str(direct) + " own coords:" + str(self.agent.vehicle.get_coordinates()))
                     await self.propagate_emergency_vehicle_info(
                         message=msg
@@ -134,7 +133,7 @@ class TrafficParticipantAgent(spade.agent.Agent):
                 msg.set_metadata("msgType", "evLocationData")
                 msg.body = message.body
                 await self.send(msg)
-                print("Propagating signalt to:" + vehicle.id)
+                print("Propagating signal to:" + vehicle.id)
 
         def check_if_ev_is_nearby(
             self, ev_coordinates: tuple[float, float], radius: float
