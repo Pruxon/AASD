@@ -118,13 +118,12 @@ class TrafficParticipantAgent(spade.agent.Agent):
                 direction = body["direction"]
                 if self.check_if_ev_is_nearby(ev_coordinates, 100.0):
                     direct = self.calculate_direction(x1=x, y1=y, ev_direction=direction)
-                    self.agent.vehicle.change_direction(
-                        direction=direct
-                    )
+                    self.agent.vehicle.change_direction(direction=direct)
+                    self.agent.vehicle.disable_random_direction_changes()
+                    await asyncio.sleep(2)
+                    self.agent.vehicle.enable_random_direction_changes()
                     print("ev dir: " + str(direction) + " ev coords" + str(ev_coordinates) + " own dir " + str(direct) + " own coords:" + str(self.agent.vehicle.get_coordinates()))
-                    await self.propagate_emergency_vehicle_info(
-                        message=msg
-                    )
+                    await self.propagate_emergency_vehicle_info(message=msg)
 
         async def propagate_emergency_vehicle_info(self, message: spade.message.Message):
             nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 50)

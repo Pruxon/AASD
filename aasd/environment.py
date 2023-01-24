@@ -6,7 +6,7 @@ from aasd.vehicle import Vehicle, VehicleType
 
 
 class Environment:
-    def __init__(self, width: int = 1280, height: int = 720, object_size: int = 10, chance_to_crash: float = 0.01):
+    def __init__(self, width: int = 1280, height: int = 720, object_size: int = 10, chance_to_crash: float = 0.001):
         self.width = width
         self.height = height
         self.obj_size: int = object_size

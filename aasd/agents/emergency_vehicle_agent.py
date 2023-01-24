@@ -82,7 +82,7 @@ class EmergencyVehicleAgent(spade.agent.Agent):
             print(f"{str(self.agent.jid)} is starting to alert other vehicles...")
 
         async def run(self):
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.7)
             nearby_vehicles = self.agent.env.get_nearby_vehicles(self.agent.vehicle, 100)
             for vehicle in nearby_vehicles:
                 msg = spade.message.Message(to=vehicle.id)

@@ -39,17 +39,17 @@ def create_agent(agent_data: AgentData, environment: Environment):
 
 
 if __name__ == "__main__":
-    env = Environment()
+    env = Environment(object_size=20)
 
     initial_agents_data = [
         InitialAgentData('manager', AgentType.Manager),
         InitialAgentData('ev1', AgentType.EmergencyVehicle),
         InitialAgentData('ev2', AgentType.EmergencyVehicle),
-        InitialAgentData('tp1', AgentType.TrafficParticipant),
-        InitialAgentData('tp2', AgentType.TrafficParticipant),
-        InitialAgentData('tp3', AgentType.TrafficParticipant),
-        InitialAgentData('tp4', AgentType.TrafficParticipant),
     ]
+
+    tps = [InitialAgentData(f'tp{i}', AgentType.TrafficParticipant) for i in range(1, 31)]
+
+    initial_agents_data += tps
 
     agents_data = [AgentData(data.name, data.type) for data in initial_agents_data]
 
